@@ -138,6 +138,14 @@ if st.button("Analyze Transcription Errors") or (reference_text and hypothesis_t
         except Exception as e:
             st.error(f"Error analyzing texts: {str(e)}")
 
+# Example usage
+with st.expander("Example Usage"):
+    st.write("**Reference:** I like to play baseball")
+    st.write("**Hypothesis:** I like to pray hockey")
+    st.write("This will identify two substitutions:")
+    st.write("- 'play' → 'pray' (similarity: ~0.75) - Likely pronunciation issue")
+    st.write("- 'baseball' → 'hockey' (similarity: 0.0) - Likely semantic/transcription error")
+
 # Notes
 st.markdown("---")
 st.caption("**Note:** Texts are automatically normalized (lowercase, punctuation removed except apostrophes in contractions) for case-insensitive comparison.")
