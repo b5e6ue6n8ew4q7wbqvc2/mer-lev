@@ -1,25 +1,47 @@
 import streamlit as st
 import jiwer
-import Levenshtein  # Note the capitalization
+import Levenshtein
 import pandas as pd
+import re
+
+def normalize_text(text):
+    """Normalize text for comparison - lowercase and remove punctuation except apostrophes in contractions"""
+    if not text:
+        return ""
+    
+    # Convert to lowercase
+    text = text.lower()
+    
+    # Remove punctuation except apostrophes that are part of contractions
+    # This regex keeps letters, spaces, and apostrophes that are between letters
+    text = re.sub(r"[^a-z0-9\s']", " ", text)
+    text = re.sub(r"(?<!\w)'|'(?!\w)", " ", text)  # Remove apostrophes not between letters
+    text = re.sub(r"\s+", " ", text)  # Normalize whitespace
+    text = text.strip()
+    
+    return text
 
 def calculate_levenshtein_ratio(word1, word2):
     """Calculate Levenshtein similarity ratio between two words"""
     max_len = max(len(word1), len(word2))
     if max_len == 0:
         return 1.0
-    edit_dist = Levenshtein.distance(word1.lower(), word2.lower())  # Correct import
+    edit_dist = Levenshtein.distance(word1.lower(), word2.lower())
     return (max_len - edit_dist) / max_len
 
 def analyze_transcription_errors(reference, hypothesis, levenshtein_threshold):
     """Analyze transcription errors and identify potential pronunciation issues"""
     
+    # Normalize texts
+    normalized_ref = normalize_text(reference)
+    normalized_hyp = normalize_text(hypothesis)
+    
     # Calculate overall MER
-    measures = jiwer.compute_measures(reference, hypothesis)
+    measures = jiwer.compute_measures(normalized_ref, normalized_hyp)
     mer = measures['wer']  # WER is essentially MER at word level
     
     # Get word-level alignment
-    alignment = jiwer.process_words(reference, hypothesis)
+    alignment = jiwer.process_words(normalized_ref, normalized_hyp)
     
     # Extract substitutions
     substitutions = []
@@ -40,7 +62,9 @@ def analyze_transcription_errors(reference, hypothesis, levenshtein_threshold):
         'accuracy': 1 - mer,
         'substitutions': substitutions,
         'total_words': len(alignment.references[0]),
-        'correct_words': len([r for r, h in zip(alignment.references[0], alignment.hypotheses[0]) if r == h])
+        'correct_words': len([r for r, h in zip(alignment.references[0], alignment.hypotheses[0]) if r == h]),
+        'normalized_reference': normalized_ref,
+        'normalized_hypothesis': normalized_hyp
     }
 
 # Streamlit app
@@ -75,6 +99,11 @@ if st.button("Analyze Transcription Errors") or (reference_text and hypothesis_t
             col1.metric("Match Error Rate (MER)", f"{results['mer']:.3f}")
             col2.metric("Accuracy", f"{results['accuracy']:.3f}")
             col3.metric("Correct Words", f"{results['correct_words']}/{results['total_words']}")
+            
+            # Show normalized texts
+            with st.expander("Normalized Texts (used for analysis)"):
+                st.write("**Reference (normalized):**", results['normalized_reference'])
+                st.write("**Hypothesis (normalized):**", results['normalized_hypothesis'])
             
             # Display substitutions
             if results['substitutions']:
@@ -118,8 +147,10 @@ if st.button("Analyze Transcription Errors") or (reference_text and hypothesis_t
 
 # Example usage
 with st.expander("Example Usage"):
-    st.write("**Reference:** I like to play baseball")
-    st.write("**Hypothesis:** I like to pray hockey")
+    st.write("**Reference:** I like to play baseball!")
+    st.write("**Hypothesis:** I LIKE TO PRAY Hockey???")  
+    st.write("Both will be normalized to lowercase with punctuation removed:")
+    st.write("- 'i like to play baseball' → 'i like to pray hockey'")
     st.write("This will identify two substitutions:")
     st.write("- 'play' → 'pray' (similarity: ~0.75) - Likely pronunciation issue")
     st.write("- 'baseball' → 'hockey' (similarity: 0.0) - Likely semantic/transcription error")
