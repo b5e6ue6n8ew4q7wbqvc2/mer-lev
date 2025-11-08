@@ -1,6 +1,6 @@
 import streamlit as st
 import jiwer
-from levenshtein import distance
+import Levenshtein  # Note the capitalization
 import pandas as pd
 
 def calculate_levenshtein_ratio(word1, word2):
@@ -8,7 +8,7 @@ def calculate_levenshtein_ratio(word1, word2):
     max_len = max(len(word1), len(word2))
     if max_len == 0:
         return 1.0
-    edit_dist = distance(word1.lower(), word2.lower())
+    edit_dist = Levenshtein.distance(word1.lower(), word2.lower())  # Correct import
     return (max_len - edit_dist) / max_len
 
 def analyze_transcription_errors(reference, hypothesis, levenshtein_threshold):
