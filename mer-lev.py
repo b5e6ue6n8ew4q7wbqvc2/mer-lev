@@ -62,9 +62,7 @@ def analyze_transcription_errors(reference, hypothesis, levenshtein_threshold):
         'accuracy': 1 - mer,
         'substitutions': substitutions,
         'total_words': len(alignment.references[0]),
-        'correct_words': len([r for r, h in zip(alignment.references[0], alignment.hypotheses[0]) if r == h]),
-        'normalized_reference': normalized_ref,
-        'normalized_hypothesis': normalized_hyp
+        'correct_words': len([r for r, h in zip(alignment.references[0], alignment.hypotheses[0]) if r == h])
     }
 
 # Streamlit app
@@ -99,11 +97,6 @@ if st.button("Analyze Transcription Errors") or (reference_text and hypothesis_t
             col1.metric("Match Error Rate (MER)", f"{results['mer']:.3f}")
             col2.metric("Accuracy", f"{results['accuracy']:.3f}")
             col3.metric("Correct Words", f"{results['correct_words']}/{results['total_words']}")
-            
-            # Show normalized texts
-            with st.expander("Normalized Texts (used for analysis)"):
-                st.write("**Reference (normalized):**", results['normalized_reference'])
-                st.write("**Hypothesis (normalized):**", results['normalized_hypothesis'])
             
             # Display substitutions
             if results['substitutions']:
@@ -145,12 +138,6 @@ if st.button("Analyze Transcription Errors") or (reference_text and hypothesis_t
         except Exception as e:
             st.error(f"Error analyzing texts: {str(e)}")
 
-# Example usage
-with st.expander("Example Usage"):
-    st.write("**Reference:** I like to play baseball!")
-    st.write("**Hypothesis:** I LIKE TO PRAY Hockey???")  
-    st.write("Both will be normalized to lowercase with punctuation removed:")
-    st.write("- 'i like to play baseball' → 'i like to pray hockey'")
-    st.write("This will identify two substitutions:")
-    st.write("- 'play' → 'pray' (similarity: ~0.75) - Likely pronunciation issue")
-    st.write("- 'baseball' → 'hockey' (similarity: 0.0) - Likely semantic/transcription error")
+# Notes
+st.markdown("---")
+st.caption("**Note:** Texts are automatically normalized (lowercase, punctuation removed except apostrophes in contractions) for case-insensitive comparison.")
