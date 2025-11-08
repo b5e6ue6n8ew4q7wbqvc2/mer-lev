@@ -36,11 +36,10 @@ def analyze_transcription_errors(reference, hypothesis, levenshtein_threshold):
     normalized_ref = normalize_text(reference)
     normalized_hyp = normalize_text(hypothesis)
     
-    # Calculate overall MER
-    measures = jiwer.compute_measures(normalized_ref, normalized_hyp)
-    mer = measures['wer']  # WER is essentially MER at word level
+    # Calculate overall MER using jiwer v4 API
+    mer = jiwer.mer(normalized_ref, normalized_hyp)
     
-    # Get word-level alignment
+    # Get word-level alignment for detailed analysis
     alignment = jiwer.process_words(normalized_ref, normalized_hyp)
     
     # Extract substitutions
