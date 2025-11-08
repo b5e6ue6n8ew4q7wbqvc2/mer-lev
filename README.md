@@ -1,5 +1,3 @@
-## File 3: `README.md`
-```markdown
 # MER-Lev: Transcription Error Analyzer
 
 A Streamlit application for analyzing transcription errors using Match Error Rate (MER) and Levenshtein distance to identify potential pronunciation issues.
